@@ -3,39 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pattern Memory - Adsgram</title>
-    <!-- Adsgram SDK -->
+    <title>Pattern Memory - MTHADGM</title>
     <script src="https://sad.adsgram.ai/js/adsgram-ad-sdk.js"></script>
     <style>
-        :root { --bg: #1a1a2e; --card: #16213e; --highlight: #4ecca3; --wrong: #e94560; }
-        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        .grid { display: grid; grid-template-columns: repeat(4, 70px); grid-gap: 10px; margin: 20px; }
-        .cell { width: 70px; height: 70px; background: var(--card); border-radius: 8px; cursor: pointer; transition: 0.3s; position: relative; }
-        .active { background: #f1c40f !important; transform: scale(0.95); }
-        .correct { background: var(--highlight) !important; }
-        .error { background: var(--wrong) !important; }
-        button { padding: 10px 25px; font-size: 18px; cursor: pointer; background: transparent; border: 2px solid var(--highlight); color: var(--highlight); border-radius: 5px; transition: 0.3s; }
-        button:hover { background: var(--highlight); color: white; }
-        #status { margin: 15px; font-weight: bold; height: 20px; color: #4ecca3; }
+        body { margin: 0; background: #1a1a2e; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        .grid { display: grid; grid-template-columns: repeat(4, 70px); grid-gap: 10px; margin: 20px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; }
+        .cell { width: 70px; height: 70px; background: #16213e; border-radius: 8px; cursor: pointer; transition: 0.2s; border: 1px solid #0f3460; }
+        .active { background: #f1c40f !important; transform: scale(0.9); }
+        .error { background: #e94560 !important; }
+        #status { margin: 15px; font-weight: bold; font-size: 20px; color: #4ecca3; height: 30px; }
+        button { padding: 12px 30px; font-size: 18px; cursor: pointer; background: #0f3460; color: #4ecca3; border: 2px solid #4ecca3; border-radius: 8px; }
     </style>
 </head>
 <body>
 
     <h1>Pattern Memory</h1>
-    <div>Level: <span id="level">1</span></div>
-    <div id="status">WATCHING...</div>
+    <div id="status">PRESS START</div>
     <div class="grid" id="grid"></div>
-    <button onclick="startGame()" id="start-btn">RESTART</button>
+    <button onclick="startGame()">START GAME</button>
 
     <script>
-        // Adsgram Block ID: 27256
         const AdController = window.Adsgram.init({ blockId: "27256" });
-
         const grid = document.getElementById('grid');
-        const levelDisplay = document.getElementById('level');
         const statusDisplay = document.getElementById('status');
-        let sequence = [], userSequence = [], level = 1, canClick = false;
+        let sequence = [], userSequence = [], canClick = false;
 
+        // အကွက် ၁၆ ကွက်ကို အရင်ဖန်တီးမယ်
         for (let i = 0; i < 16; i++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
@@ -45,12 +38,13 @@
         }
 
         function startGame() {
-            level = 1; sequence = []; nextLevel();
+            sequence = [];
+            nextLevel();
         }
 
         function nextLevel() {
-            userSequence = []; canClick = false;
-            levelDisplay.innerText = level;
+            userSequence = [];
+            canClick = false;
             statusDisplay.innerText = "WATCHING...";
             sequence.push(Math.floor(Math.random() * 16));
             showSequence();
@@ -82,29 +76,23 @@
             }
 
             if (userSequence.length === sequence.length) {
-                level++;
                 canClick = false;
-                setTimeout(nextLevel, 1000);
+                setTimeout(nextLevel, 800);
             }
         }
 
         function gameOver() {
             canClick = false;
             statusDisplay.innerText = "GAME OVER!";
-            flashCell(userSequence[userSequence.length-1], 'error');
             
-            // ကြော်ငြာတက်လာအောင် ခေါ်ခြင်း
-            setTimeout(() => {
-                AdController.show().then(() => {
-                    alert("ကြော်ငြာကြည့်ပြီးပါပြီ။ ဂိမ်းပြန်စပါမယ်။");
-                    startGame();
-                }).catch(() => {
-                    startGame();
-                });
-            }, 500);
+            // ကြော်ငြာပြဖို့ ခေါ်ယူခြင်း
+            AdController.show().then(() => {
+                alert("Game Restarting...");
+                startGame();
+            }).catch(() => {
+                startGame();
+            });
         }
-
-        startGame();
     </script>
 </body>
 </html>

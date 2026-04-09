@@ -1,104 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="my">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pattern Memory Pro</title>
+    <title>MTHADGM Game</title>
+    <!-- Adsgram Script -->
+    <script src="https://sad.adsgram.ai/js/adsgram-ad-sdk.js"></script>
     <style>
-        body { background-color: #0a192f; color: #64ffda; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .stats-container { text-align: center; margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 75px); grid-gap: 12px; background: #112240; padding: 20px; border-radius: 20px; border: 2px solid #233554; }
-        .tile { width: 75px; height: 75px; background-color: #233554; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; }
-        .active-1 { background-color: #64ffda; box-shadow: 0 0 20px #64ffda; }
-        .active-2 { background-color: #f57dff; box-shadow: 0 0 20px #f57dff; }
-        .active-3 { background-color: #ffff00; box-shadow: 0 0 20px #ffff00; }
-        .active-4 { background-color: #ff4d4d; box-shadow: 0 0 20px #ff4d4d; }
-        .active-5 { background-color: #4dff4d; box-shadow: 0 0 20px #4dff4d; }
-        .btn { margin-top: 30px; padding: 12px 40px; background: transparent; color: #64ffda; border: 2px solid #64ffda; border-radius: 5px; font-size: 18px; cursor: pointer; }
-        #status { margin-top: 20px; font-weight: bold; min-height: 24px; }
+        body { margin: 0; background: #000; color: white; text-align: center; font-family: sans-serif; }
+        canvas { display: block; margin: auto; background: #333; }
+        #ad-status { margin-top: 10px; color: #ffeb3b; }
     </style>
 </head>
 <body>
-    <div class="stats-container">
-        <h1 style="margin:0; color:#ccd6f6;">Pattern Memory</h1>
-        <p>Level: <span id="level-val">1</span></p>
-    </div>
-    <div class="grid" id="game-grid"></div>
-    <div id="status">Ready?</div>
-    <button class="btn" id="start-btn" onclick="initGame()">START GAME</button>
+
+    <h2>CHUNK JUMP</h2>
+    <canvas id="gameCanvas" width="360" height="640"></canvas>
+    <div id="ad-status"></div>
 
     <script>
-        const grid = document.getElementById('game-grid');
-        const levelDisplay = document.getElementById('level-val');
-        const statusDisplay = document.getElementById('status');
-        let gameSequence = [], userSequence = [], level = 1, waitingForUser = false, currentPatternType = 1;
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
 
-        for (let i = 0; i < 16; i++) {
-            const tile = document.createElement('div');
-            tile.className = 'tile';
-            tile.dataset.index = i;
-            tile.onclick = () => onTileClick(i);
-            grid.appendChild(tile);
-        }
+        // Adsgram Initialization (မင်းရဲ့ ID 27256 ကို ဒီမှာ ထည့်ထားတယ်)
+        const AdController = window.Adsgram.init({ blockId: "27256" });
 
-        function initGame() {
-            level = 1;
-            document.getElementById('start-btn').innerText = "RESTART";
-            nextLevel();
-        }
-
-        function nextLevel() {
-            userSequence = [];
-            waitingForUser = false;
-            levelDisplay.innerText = level;
-            statusDisplay.innerText = "WATCHING...";
-            currentPatternType = Math.floor(Math.random() * 5) + 1;
+        function showAd() {
+            document.getElementById("ad-status").innerText = "ကြော်ငြာ Loading ဖြစ်နေသည်...";
             
-            let count = (level <= 5) ? 5 : (level <= 15 ? 6 : 7);
-            gameSequence = [];
-            for (let i = 0; i < count; i++) {
-                gameSequence.push(Math.floor(Math.random() * 16));
-            }
-            playSequence();
+            AdController.show().then((result) => {
+                // ကြော်ငြာကြည့်ပြီးရင် ဖြစ်မယ့်အရာ
+                document.getElementById("ad-status").innerText = "ကြော်ငြာ ကြည့်ရှုမှု အောင်မြင်သည်။ Reward ရပါပြီ!";
+                resetGame(); 
+            }).catch((result) => {
+                // Error ဖြစ်ရင် သို့မဟုတ် ကြော်ငြာပိတ်လိုက်ရင်
+                document.getElementById("ad-status").innerText = "ကြော်ငြာပြသရန် အခက်အခဲရှိသည် သို့မဟုတ် ပိတ်လိုက်သည်။";
+                console.log(result);
+                resetGame();
+            });
         }
 
-        function playSequence() {
-            let i = 0;
-            const interval = setInterval(() => {
-                showTile(gameSequence[i]);
-                i++;
-                if (i >= gameSequence.length) {
-                    clearInterval(interval);
-                    setTimeout(() => { waitingForUser = true; statusDisplay.innerText = "YOUR TURN!"; }, 500);
-                }
-            }, 700);
+        // ဂိမ်းအပိုင်း (နမူနာ Platformer Logic)
+        let gameOver = false;
+        function resetGame() {
+            gameOver = false;
+            alert("ဂိမ်းအသစ် ပြန်စပါပြီ!");
         }
 
-        function showTile(index) {
-            const tile = document.querySelector(`[data-index="${index}"]`);
-            const cls = `active-${currentPatternType}`;
-            tile.classList.add(cls);
-            setTimeout(() => tile.classList.remove(cls), 500);
-        }
+        // ဂိမ်းရှုံးတဲ့အခါ showAd() ကို ခေါ်ပေးရပါမယ်
+        canvas.addEventListener("click", () => {
+            if (!gameOver) {
+                gameOver = true;
+                showAd(); // ကြော်ငြာပြရန် ခေါ်လိုက်ခြင်း
+            }
+        });
 
-        function onTileClick(index) {
-            if (!waitingForUser) return;
-            showTile(index);
-            userSequence.push(index);
-            const step = userSequence.length - 1;
-            if (userSequence[step] !== gameSequence[step]) {
-                statusDisplay.innerText = "GAME OVER!";
-                waitingForUser = false;
-                return;
-            }
-            if (userSequence.length === gameSequence.length) {
-                waitingForUser = false;
-                statusDisplay.innerText = "PERFECT!";
-                level++;
-                setTimeout(nextLevel, 1000);
-            }
-        }
+        ctx.fillStyle = "white";
+        ctx.fillText("ဂိမ်းစရန် မျက်နှာပြင်ကို နှိပ်ပါ", 100, 300);
     </script>
 </body>
 </html>
-

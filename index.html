@@ -1,62 +1,117 @@
 <!DOCTYPE html>
-<html lang="my">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTHADGM Game</title>
-    <!-- Adsgram Script -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pattern Memory - Adsgram</title>
+    <!-- Adsgram SDK -->
     <script src="https://sad.adsgram.ai/js/adsgram-ad-sdk.js"></script>
     <style>
-        body { margin: 0; background: #000; color: white; text-align: center; font-family: sans-serif; }
-        canvas { display: block; margin: auto; background: #333; }
-        #ad-status { margin-top: 10px; color: #ffeb3b; }
+        :root { --bg: #1a1a2e; --card: #16213e; --highlight: #4ecca3; --wrong: #e94560; }
+        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .grid { display: grid; grid-template-columns: repeat(4, 70px); grid-gap: 10px; margin: 20px; }
+        .cell { width: 70px; height: 70px; background: var(--card); border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .active { background: #f1c40f !important; transform: scale(0.95); }
+        .correct { background: var(--highlight) !important; }
+        .error { background: var(--wrong) !important; }
+        button { padding: 10px 25px; font-size: 18px; cursor: pointer; background: transparent; border: 2px solid var(--highlight); color: var(--highlight); border-radius: 5px; transition: 0.3s; }
+        button:hover { background: var(--highlight); color: white; }
+        #status { margin: 15px; font-weight: bold; height: 20px; color: #4ecca3; }
     </style>
 </head>
 <body>
 
-    <h2>CHUNK JUMP</h2>
-    <canvas id="gameCanvas" width="360" height="640"></canvas>
-    <div id="ad-status"></div>
+    <h1>Pattern Memory</h1>
+    <div>Level: <span id="level">1</span></div>
+    <div id="status">WATCHING...</div>
+    <div class="grid" id="grid"></div>
+    <button onclick="startGame()" id="start-btn">RESTART</button>
 
     <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-
-        // Adsgram Initialization (မင်းရဲ့ ID 27256 ကို ဒီမှာ ထည့်ထားတယ်)
+        // Adsgram Initialization
         const AdController = window.Adsgram.init({ blockId: "27256" });
 
-        function showAd() {
-            document.getElementById("ad-status").innerText = "ကြော်ငြာ Loading ဖြစ်နေသည်...";
+        const grid = document.getElementById('grid');
+        const levelDisplay = document.getElementById('level');
+        const statusDisplay = document.getElementById('status');
+        let sequence = [], userSequence = [], level = 1, canClick = false;
+
+        // Create Grid
+        for (let i = 0; i < 16; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.id = i;
+            cell.onclick = () => handleCellClick(i);
+            grid.appendChild(cell);
+        }
+
+        function startGame() {
+            level = 1; sequence = []; nextLevel();
+        }
+
+        function nextLevel() {
+            userSequence = []; canClick = false;
+            levelDisplay.innerText = level;
+            statusDisplay.innerText = "WATCHING...";
+            sequence.push(Math.floor(Math.random() * 16));
+            showSequence();
+        }
+
+        async function showSequence() {
+            for (let id of sequence) {
+                await new Promise(r => setTimeout(r, 600));
+                flashCell(id, 'active');
+            }
+            statusDisplay.innerText = "YOUR TURN!";
+            canClick = true;
+        }
+
+        function flashCell(id, cls) {
+            const el = grid.children[id];
+            el.classList.add(cls);
+            setTimeout(() => el.classList.remove(cls), 400);
+        }
+
+        function handleCellClick(id) {
+            if (!canClick) return;
+            flashCell(id, 'active');
+            userSequence.push(id);
+
+            if (userSequence[userSequence.length - 1] !== sequence[userSequence.length - 1]) {
+                gameOver();
+                return;
+            }
+
+            if (userSequence.length === sequence.length) {
+                level++;
+                canClick = false;
+                setTimeout(nextLevel, 1000);
+            }
+        }
+
+        function gameOver() {
+            canClick = false;
+            statusDisplay.innerText = "GAME OVER!";
+            flashCell(userSequence[userSequence.length-1], 'error');
             
+            // ကြော်ငြာပြရန် ခေါ်လိုက်ခြင်း
+            showRewardAd();
+        }
+
+        function showRewardAd() {
+            console.log("Loading Ad...");
             AdController.show().then((result) => {
-                // ကြော်ငြာကြည့်ပြီးရင် ဖြစ်မယ့်အရာ
-                document.getElementById("ad-status").innerText = "ကြော်ငြာ ကြည့်ရှုမှု အောင်မြင်သည်။ Reward ရပါပြီ!";
-                resetGame(); 
-            }).catch((result) => {
-                // Error ဖြစ်ရင် သို့မဟုတ် ကြော်ငြာပိတ်လိုက်ရင်
-                document.getElementById("ad-status").innerText = "ကြော်ငြာပြသရန် အခက်အခဲရှိသည် သို့မဟုတ် ပိတ်လိုက်သည်။";
-                console.log(result);
-                resetGame();
+                alert("ကြော်ငြာကြည့်ရှုမှု အောင်မြင်သည်။ အသက်တစ်ခါပြန်ရှင်ပါပြီ!");
+                // ကြော်ငြာကြည့်ပြီးရင် ဂိမ်းကို ဆက်ကစားခိုင်းတာ သို့မဟုတ် Restart လုပ်ခိုင်းတာမျိုး လုပ်နိုင်ပါတယ်
+                startGame();
+            }).catch((err) => {
+                console.log("Ad skipped or error", err);
+                // အကယ်၍ ကြော်ငြာမတက်ရင်လည်း ဂိမ်းပြန်စပေးရမယ်
+                if(confirm("ကြော်ငြာမတက်ပါ။ ဂိမ်းအသစ်ပြန်စမလား?")) startGame();
             });
         }
 
-        // ဂိမ်းအပိုင်း (နမူနာ Platformer Logic)
-        let gameOver = false;
-        function resetGame() {
-            gameOver = false;
-            alert("ဂိမ်းအသစ် ပြန်စပါပြီ!");
-        }
-
-        // ဂိမ်းရှုံးတဲ့အခါ showAd() ကို ခေါ်ပေးရပါမယ်
-        canvas.addEventListener("click", () => {
-            if (!gameOver) {
-                gameOver = true;
-                showAd(); // ကြော်ငြာပြရန် ခေါ်လိုက်ခြင်း
-            }
-        });
-
-        ctx.fillStyle = "white";
-        ctx.fillText("ဂိမ်းစရန် မျက်နှာပြင်ကို နှိပ်ပါ", 100, 300);
+        startGame();
     </script>
 </body>
 </html>

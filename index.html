@@ -10,7 +10,7 @@
         :root { --bg: #1a1a2e; --card: #16213e; --highlight: #4ecca3; --wrong: #e94560; }
         body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
         .grid { display: grid; grid-template-columns: repeat(4, 70px); grid-gap: 10px; margin: 20px; }
-        .cell { width: 70px; height: 70px; background: var(--card); border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .cell { width: 70px; height: 70px; background: var(--card); border-radius: 8px; cursor: pointer; transition: 0.3s; position: relative; }
         .active { background: #f1c40f !important; transform: scale(0.95); }
         .correct { background: var(--highlight) !important; }
         .error { background: var(--wrong) !important; }
@@ -28,7 +28,7 @@
     <button onclick="startGame()" id="start-btn">RESTART</button>
 
     <script>
-        // Adsgram Initialization
+        // Adsgram Block ID: 27256
         const AdController = window.Adsgram.init({ blockId: "27256" });
 
         const grid = document.getElementById('grid');
@@ -36,7 +36,6 @@
         const statusDisplay = document.getElementById('status');
         let sequence = [], userSequence = [], level = 1, canClick = false;
 
-        // Create Grid
         for (let i = 0; i < 16; i++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
@@ -94,21 +93,15 @@
             statusDisplay.innerText = "GAME OVER!";
             flashCell(userSequence[userSequence.length-1], 'error');
             
-            // ကြော်ငြာပြရန် ခေါ်လိုက်ခြင်း
-            showRewardAd();
-        }
-
-        function showRewardAd() {
-            console.log("Loading Ad...");
-            AdController.show().then((result) => {
-                alert("ကြော်ငြာကြည့်ရှုမှု အောင်မြင်သည်။ အသက်တစ်ခါပြန်ရှင်ပါပြီ!");
-                // ကြော်ငြာကြည့်ပြီးရင် ဂိမ်းကို ဆက်ကစားခိုင်းတာ သို့မဟုတ် Restart လုပ်ခိုင်းတာမျိုး လုပ်နိုင်ပါတယ်
-                startGame();
-            }).catch((err) => {
-                console.log("Ad skipped or error", err);
-                // အကယ်၍ ကြော်ငြာမတက်ရင်လည်း ဂိမ်းပြန်စပေးရမယ်
-                if(confirm("ကြော်ငြာမတက်ပါ။ ဂိမ်းအသစ်ပြန်စမလား?")) startGame();
-            });
+            // ကြော်ငြာတက်လာအောင် ခေါ်ခြင်း
+            setTimeout(() => {
+                AdController.show().then(() => {
+                    alert("ကြော်ငြာကြည့်ပြီးပါပြီ။ ဂိမ်းပြန်စပါမယ်။");
+                    startGame();
+                }).catch(() => {
+                    startGame();
+                });
+            }, 500);
         }
 
         startGame();

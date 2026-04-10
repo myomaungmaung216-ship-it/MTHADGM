@@ -1,85 +1,108 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pattern Memory</title>
-    <script src="https://sad.adsgram.ai/js/adsgram-ad-sdk.js"></script>
-    <style>
-        body { margin: 0; background: #1a1a2e; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
-        .grid { display: grid; grid-template-columns: repeat(4, 70px); grid-gap: 10px; margin-top: 20px; }
-        .cell { width: 70px; height: 70px; background: #16213e; border: 1px solid #4ecca3; border-radius: 8px; }
-        .active { background: #f1c40f !important; }
-        #status { margin-bottom: 20px; font-size: 24px; color: #4ecca3; }
-        button { padding: 10px 30px; font-size: 18px; background: #4ecca3; border: none; border-radius: 5px; cursor: pointer; }
-    </style>
+<meta charset="UTF-8">
+<title>Pattern Game</title>
+
+<style>
+body {
+  margin: 0;
+  background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: Arial;
+  color: white;
+}
+
+#game {
+  display: grid;
+  grid-template-columns: repeat(2, 120px);
+  grid-gap: 10px;
+}
+
+.btn {
+  width: 120px;
+  height: 120px;
+  border-radius: 10px;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+#b0 { background: red; }
+#b1 { background: blue; }
+#b2 { background: green; }
+#b3 { background: yellow; }
+
+.active {
+  opacity: 1;
+  box-shadow: 0 0 20px white;
+}
+
+#score {
+  position: absolute;
+  top: 20px;
+}
+</style>
 </head>
+
 <body>
-    <div id="status">Pattern Memory</div>
-    <div class="grid" id="grid"></div><br>
-    <button onclick="startGame()">RESTART</button>
 
-    <script>
-        const AdController = window.Adsgram.init({ blockId: "27256" });
-        const grid = document.getElementById('grid');
-        
-        // အကွက်တွေ အမြဲပေါ်နေအောင် လုပ်ထားတယ်
-        for (let i = 0; i < 16; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.dataset.id = i;
-            cell.onclick = () => handleCellClick(i);
-            grid.appendChild(cell);
-        }
+<h2 id="score">Level: 1</h2>
 
-        let sequence = [], userSequence = [], canClick = false;
+<div id="game">
+  <div class="btn" id="b0"></div>
+  <div class="btn" id="b1"></div>
+  <div class="btn" id="b2"></div>
+  <div class="btn" id="b3"></div>
+</div>
 
-        function startGame() {
-            sequence = [];
-            nextLevel();
-        }
+<script>
+let pattern = [];
+let player = [];
+let level = 1;
+let showing = false;
 
-        function nextLevel() {
-            userSequence = [];
-            canClick = false;
-            document.getElementById('status').innerText = "WATCHING...";
-            sequence.push(Math.floor(Math.random() * 16));
-            showSequence();
-        }
+const buttons = [
+  document.getElementById("b0"),
+  document.getElementById("b1"),
+  document.getElementById("b2"),
+  document.getElementById("b3")
+];
 
-        async function showSequence() {
-            for (let id of sequence) {
-                await new Promise(r => setTimeout(r, 600));
-                const el = grid.children[id];
-                el.classList.add('active');
-                setTimeout(() => el.classList.remove('active'), 400);
-            }
-            document.getElementById('status').innerText = "YOUR TURN!";
-            canClick = true;
-        }
+const score = document.getElementById("score");
 
-        function handleCellClick(id) {
-            if (!canClick) return;
-            grid.children[id].classList.add('active');
-            setTimeout(() => grid.children[id].classList.remove('active'), 200);
-            userSequence.push(id);
+function startGame() {
+  pattern = [];
+  level = 1;
+  nextRound();
+}
 
-            if (userSequence[userSequence.length-1] !== sequence[userSequence.length-1]) {
-                gameOver();
-                return;
-            }
-            if (userSequence.length === sequence.length) {
-                canClick = false;
-                setTimeout(nextLevel, 800);
-            }
-        }
+function nextRound() {
+  player = [];
+  pattern.push(Math.floor(Math.random() * 4));
+  score.innerText = "Level: " + level;
+  showPattern();
+}
 
-        function gameOver() {
-            canClick = false;
-            document.getElementById('status').innerText = "GAME OVER!";
-            // ကြော်ငြာပြခြင်း
-            AdController.show().then(() => startGame()).catch(() => startGame());
-        }
-    </script>
-</body>
-</html>
+async function showPattern() {
+  showing = true;
+  for (let i of pattern) {
+    await flash(buttons[i]);
+    await sleep(300);
+  }
+  showing = false;
+}
+
+function flash(btn) {
+  return new Promise(res => {
+    btn.classList.add("active");
+    setTimeout(() => {
+      btn.classList.remove("active");
+      res();
+    }, 400);
+  });
+}
+
+function sleep(ms) {
